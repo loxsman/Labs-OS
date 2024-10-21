@@ -11,6 +11,7 @@ typedef struct {
     unsigned long file_size;
 } HeaderEntry;
 
+
 // Структура узла Хаффмана
 typedef struct MinHeapNode {
     unsigned char data;
