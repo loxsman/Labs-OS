@@ -4,11 +4,9 @@
 #include <math.h>
 #include <sys/time.h>
 
-// Размер изображения (например, 512x512 пикселей)
-#define WIDTH 512
-#define HEIGHT 512
+#define WIDTH 1024
+#define HEIGHT 1024
 
-// Структура для передачи данных в поток
 typedef struct {
     int thread_id;
     int start_row;
@@ -17,7 +15,6 @@ typedef struct {
     int (*result)[WIDTH];
 } ThreadData;
 
-// Ядра Собела по X и Y
 int kernelX[3][3] = {
     {-1, 0, 1},
     {-2, 0, 2},
@@ -30,7 +27,6 @@ int kernelY[3][3] = {
     {-1, -2, -1}
 };
 
-// Функция для применения фильтра Собела в определённой части изображения
 void* applySobel(void* arg) {
     ThreadData* data = (ThreadData*)arg;
     int gx, gy;
@@ -40,7 +36,6 @@ void* applySobel(void* arg) {
             gx = 0;
             gy = 0;
 
-            // Применяем ядра фильтра Собела к пикселям изображения
             for (int k = -1; k <= 1; k++) {
                 for (int l = -1; l <= 1; l++) {
                     gx += data->image[i + k][j + l] * kernelX[k + 1][l + 1];
@@ -48,7 +43,6 @@ void* applySobel(void* arg) {
                 }
             }
 
-            // Вычисляем градиент изображения
             data->result[i][j] = sqrt(gx * gx + gy * gy);
         }
     }
@@ -56,9 +50,60 @@ void* applySobel(void* arg) {
     pthread_exit(NULL);
 }
 
+// Функция для чтения изображения в формате PGM
+int readPGM(const char* filename, int image[HEIGHT][WIDTH]) {
+    FILE* file = fopen(filename, "rb");
+    if (!file) {
+        printf("Error: Could not open file %s\n", filename);
+        return -1;
+    }
+
+    char format[3];
+    int width, height, max_value;
+    
+    // Читаем заголовок PGM файла
+    fscanf(file, "%s\n%d %d\n%d\n", format, &width, &height, &max_value);
+    if (width != WIDTH || height != HEIGHT) {
+        printf("Error: Image dimensions do not match %dx%d\n", WIDTH, HEIGHT);
+        fclose(file);
+        return -1;
+    }
+
+    // Читаем пиксели изображения
+    for (int i = 0; i < HEIGHT; i++) {
+        for (int j = 0; j < WIDTH; j++) {
+            image[i][j] = fgetc(file);
+        }
+    }
+
+    fclose(file);
+    return 0;
+}
+
+// Функция для записи результата в PGM файл
+void writePGM(const char* filename, int result[HEIGHT][WIDTH]) {
+    FILE* file = fopen(filename, "wb");
+    if (!file) {
+        printf("Error: Could not open file %s\n", filename);
+        return;
+    }
+
+    // Записываем заголовок PGM файла
+    fprintf(file, "P5\n%d %d\n255\n", WIDTH, HEIGHT);
+
+    // Записываем пиксели результата
+    for (int i = 0; i < HEIGHT; i++) {
+        for (int j = 0; j < WIDTH; j++) {
+            fputc(result[i][j] > 255 ? 255 : result[i][j], file);
+        }
+    }
+
+    fclose(file);
+}
+
 int main(int argc, char *argv[]) {
-    if (argc != 2) {
-        printf("Usage: %s <num_threads>\n", argv[0]);
+    if (argc != 3) {
+        printf("Usage: %s <num_threads> <input_image.pgm>\n", argv[0]);
         return -1;
     }
 
@@ -68,26 +113,20 @@ int main(int argc, char *argv[]) {
         return -1;
     }
 
-    // Инициализация изображения
     int image[HEIGHT][WIDTH];
-    int result[HEIGHT][WIDTH];
-    
-    // Заполняем изображение случайными значениями (для примера)
-    for (int i = 0; i < HEIGHT; i++) {
-        for (int j = 0; j < WIDTH; j++) {
-            image[i][j] = rand() % 256;
-            result[i][j] = 0;
-        }
+    int result[HEIGHT][WIDTH] = {0};
+
+    // Чтение изображения
+    if (readPGM(argv[2], image) != 0) {
+        return -1;
     }
 
     pthread_t threads[num_threads];
     ThreadData thread_data[num_threads];
 
-    // Время выполнения
     struct timeval start, end;
     gettimeofday(&start, NULL);
 
-    // Разбиваем изображение на части для обработки потоками
     int rows_per_thread = HEIGHT / num_threads;
     for (int i = 0; i < num_threads; i++) {
         thread_data[i].thread_id = i;
@@ -99,26 +138,18 @@ int main(int argc, char *argv[]) {
         pthread_create(&threads[i], NULL, applySobel, &thread_data[i]);
     }
 
-    // Ожидание завершения всех потоков
     for (int i = 0; i < num_threads; i++) {
         pthread_join(threads[i], NULL);
     }
 
     gettimeofday(&end, NULL);
 
-    // Рассчитываем время выполнения
     double elapsed = (end.tv_sec - start.tv_sec) * 1000.0;
     elapsed += (end.tv_usec - start.tv_usec) / 1000.0;
     printf("Execution time with %d threads: %f ms\n", num_threads, elapsed);
 
-    // Для проверки выводим часть результата
-    printf("Resulting image (sample):\n");
-    for (int i = 0; i < 10; i++) {
-        for (int j = 0; j < 10; j++) {
-            printf("%d ", result[i][j]);
-        }
-        printf("\n");
-    }
+    // Записываем результат в PGM файл
+    writePGM("result.pgm", result);
 
     return 0;
 }
