@@ -1,8 +1,8 @@
-:smiling_imp:OS Labs from best team ever:smiling_imp:
-
-1 :x:
-2 :white_check_mark:
-3 :white_check_mark:
-4 :x:
-5 :x:
-6 :x:
+:smiling_imp:OS Labs from best team ever:smiling_imp:\n
+\n
+1 :x: \n
+2 :white_check_mark: \n
+3 :white_check_mark: \n
+4 :x: \n
+5 :x: \n
+6 :x: \n
