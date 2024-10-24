@@ -1,0 +1,10 @@
+ls
+cat lab2
+cat lab2.c
+killall yandex
+nice 10 firefox
+ls
+cat lab2.c
+killall yandex
+nice 10 firefox
+ls
