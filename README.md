@@ -2,11 +2,11 @@
 <h2>
 <strong>Completed labs:</strong><br />
 <br />
-1 :x: <br />
+1 :soon: <br />
 2 :white_check_mark: <br />
 3 :white_check_mark: <br />
 4 :white_check_mark: <br />
-5 :x: <br />
+5 :soon: <br />
 6 :x: <br />
 </h2>
 
