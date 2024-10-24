@@ -2,6 +2,8 @@ Hello, this is a test file.
 It contains some text to encrypt.
 Let's see how XOR encryption works.
 
+всем привет
+
 
 head -c 100 /dev/urandom > random_file.bin
 ./program2 file1.txt random_file.bin encrypted_file.bin
