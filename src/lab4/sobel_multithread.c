@@ -11,8 +11,8 @@ typedef struct {
     int thread_id;
     int start_row;
     int end_row;
-    int (*image)[WIDTH];
-    int (*result)[WIDTH];
+    unsigned char (*image)[WIDTH];
+    unsigned char (*result)[WIDTH];
 } ThreadData;
 
 int kernelX[3][3] = {
@@ -43,7 +43,9 @@ void* applySobel(void* arg) {
                 }
             }
 
-            data->result[i][j] = sqrt(gx * gx + gy * gy);
+            int magnitude = (int)sqrt(gx * gx + gy * gy);
+            if (magnitude > 255) magnitude = 255;
+            data->result[i][j] = (unsigned char)magnitude;
         }
     }
 
@@ -51,7 +53,7 @@ void* applySobel(void* arg) {
 }
 
 // Функция для чтения изображения в формате PGM
-int readPGM(const char* filename, int image[HEIGHT][WIDTH]) {
+int readPGM(const char* filename, unsigned char image[HEIGHT][WIDTH]) {
     FILE* file = fopen(filename, "rb");
     if (!file) {
         printf("Error: Could not open file %s\n", filename);
@@ -81,7 +83,7 @@ int readPGM(const char* filename, int image[HEIGHT][WIDTH]) {
 }
 
 // Функция для записи результата в PGM файл
-void writePGM(const char* filename, int result[HEIGHT][WIDTH]) {
+void writePGM(const char* filename, unsigned char result[HEIGHT][WIDTH]) {
     FILE* file = fopen(filename, "wb");
     if (!file) {
         printf("Error: Could not open file %s\n", filename);
@@ -94,7 +96,7 @@ void writePGM(const char* filename, int result[HEIGHT][WIDTH]) {
     // Записываем пиксели результата
     for (int i = 0; i < HEIGHT; i++) {
         for (int j = 0; j < WIDTH; j++) {
-            fputc(result[i][j] > 255 ? 255 : result[i][j], file);
+            fputc(result[i][j], file);
         }
     }
 
@@ -113,8 +115,8 @@ int main(int argc, char *argv[]) {
         return -1;
     }
 
-    int image[HEIGHT][WIDTH];
-    int result[HEIGHT][WIDTH] = {0};
+    unsigned char image[HEIGHT][WIDTH];
+    unsigned char result[HEIGHT][WIDTH] = {0};
 
     // Чтение изображения
     if (readPGM(argv[2], image) != 0) {
