@@ -8,7 +8,7 @@
 
 typedef struct {
     char file_name[256];
-    unsigned long file_size;
+    unsigned   long file_size;
 } HeaderEntry;
 
 
